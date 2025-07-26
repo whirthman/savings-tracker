@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daily Savings Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-green: #4CAF50; /* A vibrant green for accents */
+            --primary-green-dark: #388E3C; /* Darker green for hover/active states */
+            --light-bg: #F0F2F5; /* Light grey background */
+            --card-bg: #FFFFFF; /* White for cards and main elements */
+            --text-color-dark: #333333; /* Dark text for light mode */
+            --text-color-light: #F8F8F8; /* Light text for dark mode */
+            --border-color: #E0E0E0; /* Light border color */
+            --shadow-light: rgba(0, 0, 0, 0.08); /* Soft shadow */
+            --shadow-medium: rgba(0, 0, 0, 0.12); /* Slightly stronger shadow */
+            --completed-bg: #E8F5E9; /* Light green for completed cards */
+            --completed-border: #66BB6A; /* Green border for completed cards */
+            --completed-text: #2E7D32; /* Dark green text for completed cards */
+        }
+
+        /* Dark Mode Variables */
+        .dark-mode {
+            --light-bg: #1A1A1A;
+            --card-bg: #2C2C2C;
+            --text-color-dark: #E0E0E0;
+            --border-color: #444444;
+            --shadow-light: rgba(0, 0, 0, 0.2);
+            --shadow-medium: rgba(0, 0, 0, 0.3);
+            --completed-bg: #388E3C;
+            --completed-border: #81C784;
+            --completed-text: #FFFFFF;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif; /* Modern font */
+            background: var(--light-bg);
+            color: var(--text-color-dark);
+            padding: 2rem; /* More generous padding */
+            max-width: 900px; /* Slightly wider max-width */
+            margin: auto;
+            transition: background 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem; /* Increased margin */
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .dark-mode h1 {
+            color: var(--primary-green); /* Keep primary green in dark mode */
+        }
+
+        .header-actions {
+            text-align: right;
+            margin-bottom: 1.5rem;
+            display: flex; /* Use flexbox for button alignment */
+            justify-content: flex-end; /* Align to the right */
+            gap: 1rem; /* Space between buttons */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+
+        .dashboard,
+        .modal-content {
+            background: var(--card-bg);
+            padding: 2rem; /* More padding for a premium feel */
+            border-radius: 16px; /* More rounded corners */
+            margin-bottom: 2rem;
+            box-shadow: 0 6px 20px var(--shadow-light); /* Enhanced shadow */
+            transition: background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dashboard p {
+            margin: 0.75rem 0; /* More vertical space for text */
+            font-size: 1.05rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard p strong {
+            font-weight: 600;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 1rem; /* More space between inputs/button */
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap; /* Allow wrapping */
+        }
+
+        .input-section input {
+            flex: 1;
+            padding: 0.9rem 1rem; /* More padding inside inputs */
+            border-radius: 10px; /* More rounded inputs */
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            color: var(--text-color-dark);
+            background: var(--card-bg); /* Match card background */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            min-width: 150px; /* Ensure inputs don't get too small */
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2); /* Green focus glow */
+        }
+
+        button {
+            padding: 0.9rem 1.8rem; /* Generous padding for buttons */
+            border: none;
+            background: var(--primary-green);
+            color: var(--text-color-light);
+            border-radius: 10px; /* More rounded buttons */
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        button:hover {
+            background: var(--primary-green-dark);
+            transform: translateY(-2px); /* Subtle lift effect */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        button#startButton {
+            background: var(--primary-green);
+        }
+        button#startButton:hover {
+            background: var(--primary-green-dark);
+        }
+
+        button[onclick="resetAll()"] {
+            background: #EF5350; /* Red for reset button */
+        }
+        button[onclick="resetAll()"]:hover {
+            background: #D32F2F;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Slightly larger cards */
+            gap: 1rem; /* More space between cards */
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px; /* More rounded cards */
+            text-align: center;
+            padding: 1.2rem 0.8rem; /* Adjusted padding */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px var(--shadow-light); /* Soft shadow for cards */
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px var(--shadow-medium);
+            border-color: var(--primary-green); /* Highlight on hover */
+        }
+
+        .card.completed {
+            background: var(--completed-bg);
+            border-color: var(--completed-border);
+            color: var(--completed-text);
+            font-weight: 700;
+        }
+
+        .progress {
+            margin-top: 1rem;
+            height: 12px; /* Thicker progress bar */
+            background: #E0E0E0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-green);
+            width: 0%;
+            border-radius: 6px;
+            transition: width 0.4s ease-out; /* Smoother transition */
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 3rem; /* Slightly higher from bottom */
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-color-dark); /* Dark background for toast */
+            color: var(--text-color-light);
+            font-size: 1rem;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4); /* Stronger shadow for toast */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 999;
+            text-align: center;
+        }
+        .dark-mode .toast {
+            background: #444444; /* Slightly lighter dark mode toast */
+            color: #EEEEEE;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); /* Slightly darker overlay */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            padding: 2.5rem; /* More generous padding */
+            border-radius: 16px; /* Consistent rounded corners */
+            text-align: center;
+            max-width: 450px; /* Wider modal */
+            box-shadow: 0 10px 30px var(--shadow-medium); /* Prominent shadow */
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content h2 {
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .modal-content p {
+            font-size: 1.1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .modal-content button {
+            margin: 0.75rem; /* Space between modal buttons */
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        #reportSection {
+            display: none; /* Hidden by default */
+            padding: 2rem;
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            /* No shadow or border here, as it's for print */
+        }
+        #reportSection h2 {
+            color: #2e7d32;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        #reportSection p {
+            margin-bottom: 0.7rem;
+            font-size: 1.1rem;
+        }
+        #reportSection p strong {
+            font-weight: 600;
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            body {
+                background: white; /* Ensure white background for print */
+                color: black; /* Ensure black text for print */
+            }
+            /* Hide everything that is NOT the reportSection */
+            body > *:not(#reportSection) {
+                display: none !important;
+            }
+            #reportSection {
+                display: block !important; /* Make sure report section is visible */
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                box-shadow: none; /* Remove shadows for print */
+                padding: 0; /* Remove padding for print layout */
+                margin: 0; /* Remove margins for print layout */
+            }
+            /* Ensure text and content inside reportSection is visible */
+            #reportSection * {
+                visibility: visible !important;
+                display: block !important; /* Ensure block display for content flow */
+                color: black !important; /* Force black text */
+            }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 1.5rem;
+            }
+            .dashboard, .modal-content {
+                padding: 1.5rem;
+            }
+            .input-section {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+            .input-section input,
+            .input-section button {
+                width: 100%;
+                font-size: 0.95rem;
+                padding: 0.8rem;
+            }
+            .header-actions {
+                justify-content: center;
+                gap: 0.8rem;
+            }
+            button {
+                font-size: 0.9rem;
+                padding: 0.7rem 1.2rem;
+            }
+            .cards {
+                grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            }
+            .card {
+                padding: 1rem 0.6rem;
+                font-size: 1rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .modal-content h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            .dashboard p {
+                font-size: 0.9rem;
+            }
+            .cards {
+                grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); /* Even smaller cards */
+                gap: 0.7rem;
+            }
+            .card {
+                font-size: 0.9rem;
+                padding: 0.8rem 0.4rem;
+            }
+            .toast {
+                font-size: 0.9rem;
+                padding: 0.8rem 1.5rem;
+                bottom: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Daily Savings Tracker</h1>
+
+    <div class="header-actions">
+        <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+        <button onclick="resetAll()" style="background:#f44336;">Reset All</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="input-section">
+            <input type="number" id="daysInput" placeholder="Number of Days" />
+            <input type="number" id="amountInput" placeholder="Daily Amount (GHS)" />
+            <button id="startButton" onclick="startSaving()">Start Saving</button>
+        </div>
+
+        <p><strong>Total Goal:</strong> <span id="totalGoal">0 GHS</span></p>
+        <p><strong>Saved So Far:</strong> <span id="savedAmount">0 GHS</span></p>
+        <p><strong>Days Completed:</strong> <span id="completedDays">0</span></p>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <div class="cards" id="cardsContainer"></div>
+
+    <div class="toast" id="quoteToast"></div>
+
+    <div class="modal" id="completionModal">
+        <div class="modal-content">
+            <h2>🎉 Savings Goal Complete!</h2>
+            <p>You've successfully completed your savings plan.</p>
+            <p><strong>Total Saved:</strong> <span id="modalTotalSaved">0 GHS</span></p>
+            <p><strong>Start Date:</strong> <span id="modalStartDate"></span></p>
+            <p><strong>End Date:</strong> <span id="modalEndDate"></span></p>
+            <button onclick="downloadReport()">Download Report</button>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="reportSection">
+        <h2>💼 Savings Completion Report</h2>
+        <p><strong>Total Days:</strong> <span id="reportDays"></span></p>
+        <p><strong>Daily Amount:</strong> <span id="reportAmount"></span> GHS</p>
+        <p><strong>Total Saved:</strong> <span id="reportSaved"></span> GHS</p>
+        <p><strong>Start Date:</strong> <span id="reportStart"></span></p>
+        <p><strong>End Date:</strong> <span id="reportEnd"></span></p>
+        <p><strong>Completed:</strong> <span id="reportCompleted"></span> days</p>
+        <p><strong>Progress:</strong> <span id="reportPercent"></span>%</p>
+        <p>✅ Congratulations on staying consistent!</p>
+    </div>
+
+    <script>
+        let savingsData = {
+            days: 0,
+            amount: 0,
+            completed: [],
+            startDate: null,
+            endDate: null
+        };
+
+        const quotes = [
+            "Every little bit adds up to something big. Keep going!",
+            "You're one step closer to financial freedom!",
+            "Discipline is the bridge between goals and achievement. Well done!",
+            "Small savings today, big future tomorrow.",
+            "Keep going — your future self is smiling because of this.",
+            "Wealth is built one consistent decision at a time.",
+            "You did it! Remember, consistency beats intensity every time."
+        ];
+
+        function startSaving() {
+            const days = parseInt(document.getElementById("daysInput").value);
+            const amount = parseFloat(document.getElementById("amountInput").value);
+            if (!days || !amount || days <= 0 || amount <= 0) {
+                alert("Please enter valid positive numbers for days and daily amount.");
+                return;
+            }
+            const now = new Date().toISOString();
+            savingsData = { days, amount, completed: [], startDate: now, endDate: null };
+            localStorage.setItem("savingsData", JSON.stringify(savingsData));
+            renderCards();
+            updateDashboard();
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("daysInput").value = "";
+            document.getElementById("amountInput").value = "";
+        }
+
+        function renderCards() {
+            const container = document.getElementById("cardsContainer");
+            container.innerHTML = "";
+            for (let i = 1; i <= savingsData.days; i++) {
+                const card = document.createElement("div");
+                card.className = "card";
+                card.textContent = `Day ${i}`;
+                if (savingsData.completed.includes(i)) card.classList.add("completed");
+                card.addEventListener("click", () => toggleDay(i));
+                container.appendChild(card);
+            }
+        }
+
+        function toggleDay(day) {
+            if (savingsData.days === 0) return;
+            const index = savingsData.completed.indexOf(day);
+            if (index === -1) {
+                savingsData.completed.push(day);
+                showQuote();
+            } else {
+                savingsData.completed.splice(index, 1);
+            }
+            savingsData.completed.sort((a, b) => a - b);
+            localStorage.setItem("savingsData", JSON.stringify(savingsData));
+            renderCards();
+            updateDashboard();
+
+            if (savingsData.completed.length === savingsData.days && !savingsData.endDate) {
+                savingsData.endDate = new Date().toISOString();
+                localStorage.setItem("savingsData", JSON.stringify(savingsData));
+                showCompletionModal();
+            }
+        }
+
+        function updateDashboard() {
+            const totalGoal = savingsData.days * savingsData.amount;
+            const completed = savingsData.completed.length;
+            const saved = completed * savingsData.amount;
+            const progressPercent = savingsData.days > 0 ? (completed / savingsData.days) * 100 : 0;
+            
+            document.getElementById("totalGoal").textContent = `${totalGoal.toFixed(2)} GHS`;
+            document.getElementById("savedAmount").textContent = `${saved.toFixed(2)} GHS`;
+            document.getElementById("completedDays").textContent = completed;
+            document.getElementById("progressBar").style.width = `${progressPercent}%`;
+
+            if (savingsData.days > 0) {
+                document.getElementById("startButton").style.display = "none";
+                document.getElementById("daysInput").style.display = "none";
+                document.getElementById("amountInput").style.display = "none";
+            } else {
+                document.getElementById("startButton").style.display = "block";
+                document.getElementById("daysInput").style.display = "block";
+                document.getElementById("amountInput").style.display = "block";
+            }
+        }
+
+        function showQuote() {
+            const toast = document.getElementById("quoteToast");
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            toast.textContent = quote;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+
+        function showCompletionModal() {
+            const saved = savingsData.days * savingsData.amount;
+            document.getElementById("modalTotalSaved").textContent = `${saved.toFixed(2)} GHS`;
+            document.getElementById("modalStartDate").textContent = new Date(savingsData.startDate).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById("modalEndDate").textContent = new Date(savingsData.endDate).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById("completionModal").classList.add("show");
+        }
+
+        function closeModal() {
+            document.getElementById("completionModal").classList.remove("show");
+        }
+
+        function downloadReport() {
+            document.getElementById("reportDays").textContent = savingsData.days;
+            document.getElementById("reportAmount").textContent = savingsData.amount.toFixed(2);
+            document.getElementById("reportSaved").textContent = (savingsData.days * savingsData.amount).toFixed(2);
+            document.getElementById("reportCompleted").textContent = savingsData.completed.length;
+            document.getElementById("reportStart").textContent = new Date(savingsData.startDate).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById("reportEnd").textContent = new Date(savingsData.endDate).toLocaleDateString('en-GH', { year: 'numeric', month: 'long', day: 'numeric' });
+            const percent = savingsData.days > 0 ? (savingsData.completed.length / savingsData.days) * 100 : 0;
+            document.getElementById("reportPercent").textContent = percent.toFixed(2);
+
+            const report = document.getElementById("reportSection");
+            report.style.display = "block"; // Explicitly show the report section
+
+            // Use a slight delay to ensure the browser has time to render the content
+            // before initiating the print dialog.
+            setTimeout(() => {
+                window.print();
+                report.style.display = "none"; // Hide after printing
+                closeModal();
+            }, 300); // Increased delay slightly
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+        }
+
+        function resetAll() {
+            if (confirm("Are you sure you want to reset all savings data? This action cannot be undone.")) {
+                localStorage.removeItem("savingsData");
+                savingsData = { days: 0, amount: 0, completed: [], startDate: null, endDate: null };
+                renderCards();
+                updateDashboard();
+                document.getElementById("startButton").style.display = "block";
+                document.getElementById("daysInput").style.display = "block";
+                document.getElementById("amountInput").style.display = "block";
+                document.getElementById("daysInput").value = "";
+                document.getElementById("amountInput").value = "";
+            }
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem("savingsData");
+            if (saved) {
+                savingsData = JSON.parse(saved);
+                renderCards();
+                updateDashboard();
+            }
+
+            const dark = localStorage.getItem("darkMode");
+            if (dark === "true") document.body.classList.add("dark-mode");
+        };
+    </script>
+
+</body>
+</html>
